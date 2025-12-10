@@ -4,11 +4,6 @@
         output stdout
         format json
     }
-
-    # Configuração do servidor PHP do FrankenPHP
-    frankenphp {
-        worker 4
-    }
 }
 
 :80 {
