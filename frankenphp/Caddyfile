@@ -1,10 +1,10 @@
+{
+    auto_https off
+    admin off
+}
+
 :80 {
     root * /app/public
-
-    php_server frankenphp {
-        worker /app/public
-    }
-
-    encode gzip zstd
+    php_server
     file_server
 }

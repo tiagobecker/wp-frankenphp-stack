@@ -1,23 +1,26 @@
+version: "3.9"
+
 services:
   frankenphp:
-    build:
-      context: ./frankenphp
+    build: ./frankenphp
     container_name: frankenphp-wp
+    restart: always
     ports:
-      - "8080:80"
+      - "80:80"
+      - "443:443"
     volumes:
       - ./wordpress:/app/public
     environment:
-      WORDPRESS_DB_HOST: db
-      WORDPRESS_DB_NAME: wordpress
-      WORDPRESS_DB_USER: wpuser
-      WORDPRESS_DB_PASSWORD: wppass
-      REDIS_HOST: redis
+      DB_HOST: mariadb
+      DB_NAME: wordpress
+      DB_USER: wpuser
+      DB_PASSWORD: wppassword
+      WP_ENV: production
     depends_on:
-      - db
+      - mariadb
       - redis
 
-  db:
+  mariadb:
     image: mariadb:11
     container_name: mariadb-wp
     restart: always
@@ -25,17 +28,18 @@ services:
       MYSQL_ROOT_PASSWORD: rootpass
       MYSQL_DATABASE: wordpress
       MYSQL_USER: wpuser
-      MYSQL_PASSWORD: wppass
+      MYSQL_PASSWORD: wppassword
     volumes:
-      - db_data:/var/lib/mysql
+      - mariadb_data:/var/lib/mysql
 
   redis:
     image: redis:7
     container_name: redis-wp
+    restart: always
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
       - redis_data:/data
 
 volumes:
-  db_data:
+  mariadb_data:
   redis_data:

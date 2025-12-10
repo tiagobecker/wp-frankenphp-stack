@@ -1,1 +1,3 @@
 path: /app/public
+apache_modules:
+  - mod_rewrite

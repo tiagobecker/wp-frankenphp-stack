@@ -1,32 +1,58 @@
-FROM dunglas/frankenphp
+FROM dunglas/frankenphp:1-php8.5-bookworm
 
-RUN apk add --no-cache \
+# Instalar dependências do sistema
+RUN apt-get update && apt-get install -y \
     bash \
     curl \
     unzip \
     tar \
+    git \
     openssl \
     mariadb-client \
     libzip-dev \
-    oniguruma-dev \
-    icu-dev \
-    autoconf \
+    libonig-dev \
+    libicu-dev \
+    libmagickwand-dev \
+    imagemagick \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    libwebp-dev \
+    libxml2-dev \
     g++ \
     make \
-    php-dev
+    autoconf \
+    pkg-config \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install Redis extension from PECL
-RUN pecl install redis \
-    && docker-php-ext-enable redis
+# PHP extensões
+RUN install-php-extensions \
+    pdo_mysql \
+    gd \
+    intl \
+    zip \
+    opcache \
+    imagick \
+    redis
 
-RUN docker-php-ext-install mysqli pdo pdo_mysql intl opcache
+# Instalar Composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar \
-    && chmod +x wp-cli.phar \
-    && mv wp-cli.phar /usr/local/bin/wp
-
-COPY php.ini /usr/local/etc/php/conf.d/php.ini
+# Copiar configs
+COPY php.ini /usr/local/etc/php/
 COPY Caddyfile /etc/caddy/Caddyfile
-COPY install-wordpress.sh /install-wordpress.sh
+COPY install-wordpress.sh /usr/local/bin/install-wordpress.sh
+COPY wp-cli.yml /etc/wp-cli.yml
 
-ENTRYPOINT ["sh", "/install-wordpress.sh"]
+# Permitir execução do instalador WordPress
+RUN chmod +x /usr/local/bin/install-wordpress.sh
+
+WORKDIR /app/public
+
+# Executar WordPress installer automático
+RUN /usr/local/bin/install-wordpress.sh
+
+EXPOSE 80
+EXPOSE 443
+
+CMD ["frankenphp", "run", "--config", "/etc/caddy/Caddyfile"]

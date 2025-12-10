@@ -1,28 +1,32 @@
 #!/bin/bash
 
+set -e
+
 cd /app/public
 
-# WordPress already installed?
-if [ ! -f "wp-config.php" ]; then
-    echo "Downloading WordPress..."
-    curl -O https://wordpress.org/latest.zip
-    unzip latest.zip
-    mv wordpress/* .
-    rm -rf wordpress latest.zip
-
-    cp wp-config-sample.php wp-config.php
-
-    sed -i "s/database_name_here/${WORDPRESS_DB_NAME}/" wp-config.php
-    sed -i "s/username_here/${WORDPRESS_DB_USER}/" wp-config.php
-    sed -i "s/password_here/${WORDPRESS_DB_PASSWORD}/" wp-config.php
-    sed -i "s/localhost/${WORDPRESS_DB_HOST}/" wp-config.php
-
-    # Enable Redis cache
-    echo "define('WP_REDIS_HOST', getenv('REDIS_HOST'));" >> wp-config.php
-    echo "define('WP_CACHE', true);" >> wp-config.php
-
-    chown -R www-data:www-data /app/public
+# Se já existir WordPress, não instala
+if [ -f "wp-config.php" ]; then
+    echo "WordPress já instalado, pulando..."
+    exit 0
 fi
 
-# Start FrankenPHP
-exec frankenphp run --config=/etc/caddy/Caddyfile
+echo "Baixando WordPress..."
+curl -o wp.tar.gz https://wordpress.org/latest.tar.gz
+tar -xzf wp.tar.gz --strip-components=1
+rm wp.tar.gz
+
+echo "Instalando WP-CLI..."
+curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+chmod +x wp-cli.phar
+mv wp-cli.phar /usr/local/bin/wp
+
+echo "Gerando wp-config..."
+wp config create \
+  --dbname="${DB_NAME}" \
+  --dbuser="${DB_USER}" \
+  --dbpass="${DB_PASSWORD}" \
+  --dbhost="${DB_HOST}" \
+  --skip-check \
+  --allow-root
+
+echo "Instalação do WordPress pronta."
