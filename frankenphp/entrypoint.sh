@@ -9,31 +9,47 @@ cd $WP_PATH
 
 # --- Instalar WordPress se não existir ---
 if [ ! -f "$WP_PATH/wp-config.php" ]; then
-    echo "Instalando WordPress..."
+    echo "WordPress não encontrado. Instalando..."
     $WP_CLI core download --allow-root
-    $WP_CLI config create \
+
+    # Retry para criar config (aguarda banco acessível)
+    until $WP_CLI config create \
         --dbname="${DB_NAME}" \
         --dbuser="${DB_USER}" \
         --dbpass="${DB_PASSWORD}" \
         --dbhost="${DB_HOST}" \
         --skip-check \
-        --allow-root
-    echo "WordPress instalado."
+        --allow-root; do
+        echo "Banco não acessível. Tentando novamente em 2s..."
+        sleep 2
+    done
+
+    echo "WordPress instalado e wp-config.php criado."
 fi
 
-# --- Aguarda WordPress totalmente pronto ---
-echo "Aguardando WordPress ficar disponível..."
+# --- Aguarda WordPress pronto ---
+echo "Aguardando WordPress estar totalmente disponível..."
 until $WP_CLI core is-installed --allow-root; do
-    echo "WordPress ainda não está pronto, aguardando 2s..."
+    echo "WordPress ainda não instalado. Aguardando 2s..."
     sleep 2
 done
 
-# --- Instala e ativa plugins ---
-echo "Instalando plugins Redis Object Cache e WP Super Cache..."
-$WP_CLI plugin install redis-cache --activate --allow-root || true
-$WP_CLI plugin install wp-super-cache --activate --allow-root || true
+# --- Instala e ativa plugins com retries ---
+echo "Instalando plugins Redis Cache e WP Super Cache..."
+for i in {1..5}; do
+    set +e
+    $WP_CLI plugin install redis-cache --activate --allow-root
+    $WP_CLI plugin install wp-super-cache --activate --allow-root
+    if [ $? -eq 0 ]; then
+        echo "Plugins instalados com sucesso."
+        break
+    fi
+    set -e
+    echo "Erro ao instalar plugins. Retry em 2s..."
+    sleep 2
+done
 
-# --- Configura Redis no wp-config.php ---
+# --- Configura Redis ---
 if ! grep -q "WP_REDIS_HOST" wp-config.php; then
 cat << 'EOF' >> wp-config.php
 
@@ -56,7 +72,7 @@ define('WP_CACHE', true);
 EOF
 fi
 
-echo "Plugins instalados e configurados com sucesso."
+echo "Plugins e configurações aplicadas com sucesso."
 
 # --- Inicia FrankenPHP ---
 exec frankenphp run --config /etc/caddy/Caddyfile
