@@ -5,9 +5,9 @@ WP_PATH="/app/public"
 
 echo "=== WP Plugins Installer ==="
 
-# aguarda wp-config existir
-echo "Aguardando WordPress em $WP_PATH..."
+# aguardar wp-config existir
 while [ ! -f "$WP_PATH/wp-config.php" ]; do
+    echo "Aguardando wp-config.php..."
     sleep 2
 done
 
@@ -15,10 +15,14 @@ cd $WP_PATH
 
 echo "Instalando e ativando plugins..."
 
-wp plugin install redis-cache --activate --allow-root || wp plugin activate redis-cache --allow-root
-wp plugin install wp-super-cache --activate --allow-root || wp plugin activate wp-super-cache --allow-root
+# instalar plugins sem causar erros em caso de já instalado
+wp plugin install redis-cache --allow-root || true
+wp plugin activate redis-cache --allow-root || true
 
-echo "Configurando Redis..."
+wp plugin install wp-super-cache --allow-root || true
+wp plugin activate wp-super-cache --allow-root || true
+
+echo "Configurando Redis no wp-config.php..."
 
 if ! grep -q "WP_REDIS_HOST" wp-config.php; then
 cat << 'EOF' >> wp-config.php
@@ -33,16 +37,14 @@ define( 'WP_REDIS_PREFIX', 'wp_' );
 EOF
 fi
 
-wp redis enable --allow-root || true
-
 echo "Configurando WP Super Cache..."
-wp super-cache enable --allow-root || true
-wp super-cache flush --allow-root || true
 
-echo "Pré-cacheando homepage..."
-curl -s "http://localhost" > /dev/null || true
+if ! grep -q "WP_CACHE" wp-config.php; then
+cat << 'EOF' >> wp-config.php
 
-echo "Ajustando permissões..."
-chown -R www-data:www-data $WP_PATH
+/** WP Super Cache */
+define('WP_CACHE', true);
+EOF
+fi
 
-echo "Plugins e configurações prontos."
+echo "Plugins instalados e configurados com sucesso."
