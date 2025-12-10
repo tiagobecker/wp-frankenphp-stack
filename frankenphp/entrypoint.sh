@@ -25,7 +25,7 @@ if [ ! -f wp-config.php ]; then
     done
 fi
 
-# --- Espera WordPress estar totalmente instalado ---
+# --- Espera WordPress estar instalado ---
 until $WP_CLI core is-installed --allow-root; do
     echo "WordPress ainda não instalado, aguardando..."
     sleep 2
