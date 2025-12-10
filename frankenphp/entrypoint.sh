@@ -4,20 +4,18 @@ set -e
 WP_PATH="/app/public"
 WP_CLI="/usr/local/bin/wp"
 
-# --- Espera volume estar montado ---
+# Espera volume do Coolify
 until [ -d "$WP_PATH" ]; do
-    echo "Aguardando o volume do Coolify..."
+    echo "Aguardando volume do Coolify..."
     sleep 1
 done
 
 cd $WP_PATH
 
-# --- Instala WordPress se não existir ---
+# Instala WordPress se não existir
 if [ ! -f wp-config.php ]; then
     echo "Instalando WordPress..."
     $WP_CLI core download --allow-root
-
-    # Espera banco MariaDB estar acessível
     until $WP_CLI config create \
         --dbname="${DB_NAME}" \
         --dbuser="${DB_USER}" \
@@ -39,17 +37,15 @@ if [ ! -f wp-config.php ]; then
         --allow-root
 fi
 
-# --- Instala plugins ---
+# Instala plugins
 for plugin in redis-cache wp-super-cache; do
     if ! $WP_CLI plugin is-installed $plugin --allow-root; then
         $WP_CLI plugin install $plugin --activate --allow-root
     fi
 done
 
-# --- Configura Redis ---
+# Configura Redis e WP Super Cache
 grep -q "WP_REDIS_HOST" wp-config.php || cat << 'EOF' >> wp-config.php
-
-/** Redis Object Cache */
 define( 'WP_REDIS_HOST', getenv('REDIS_HOST') ?: 'redis' );
 define( 'WP_REDIS_PORT', getenv('REDIS_PORT') ?: 6379 );
 define( 'WP_REDIS_TIMEOUT', 1 );
@@ -58,14 +54,10 @@ define( 'WP_REDIS_DATABASE', 0 );
 define( 'WP_REDIS_PREFIX', 'wp_' );
 EOF
 
-# --- Configura WP Super Cache ---
 grep -q "WP_CACHE" wp-config.php || cat << 'EOF' >> wp-config.php
-
-/** WP Super Cache */
 define('WP_CACHE', true);
 EOF
 
 echo "WordPress e plugins prontos."
 
-# --- Inicia FrankenPHP ---
 exec frankenphp run --config /etc/caddy/Caddyfile
