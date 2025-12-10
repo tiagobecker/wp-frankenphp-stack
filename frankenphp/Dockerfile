@@ -10,7 +10,14 @@ RUN apk add --no-cache \
     libzip-dev \
     oniguruma-dev \
     icu-dev \
-    php82-pecl-redis
+    autoconf \
+    g++ \
+    make \
+    php-dev
+
+# Install Redis extension from PECL
+RUN pecl install redis \
+    && docker-php-ext-enable redis
 
 RUN docker-php-ext-install mysqli pdo pdo_mysql intl opcache
 
