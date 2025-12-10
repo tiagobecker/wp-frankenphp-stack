@@ -41,4 +41,7 @@ wp config set WP_REDIS_TIMEOUT 1 --raw --allow-root
 wp config set WP_REDIS_READ_TIMEOUT 1 --raw --allow-root
 wp config set WP_REDIS_DATABASE 0 --raw --allow-root
 
+echo "Ativando cache Redis..."
+wp redis enable --allow-root
+
 echo "Instalação do WordPress pronta."
