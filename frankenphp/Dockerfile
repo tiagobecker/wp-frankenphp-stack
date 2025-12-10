@@ -43,21 +43,19 @@ COPY php.ini /usr/local/etc/php/
 COPY Caddyfile /etc/caddy/Caddyfile
 COPY wp-cli.yaml /etc/wp-cli.yaml
 
+# scripts
 COPY install-wordpress.sh /usr/local/bin/install-wordpress.sh
 COPY install-plugins.sh /usr/local/bin/install-plugins.sh
+COPY entrypoint.sh /entrypoint.sh
 
 RUN chmod +x /usr/local/bin/install-wordpress.sh
 RUN chmod +x /usr/local/bin/install-plugins.sh
+RUN chmod +x /entrypoint.sh
 
-# --- SOLUÇÃO: criamos o diretório e trocamos o WORKDIR antes dos scripts ---
-RUN mkdir -p /app/public
 WORKDIR /app/public
-
-# instalar WordPress e plugins
-RUN /usr/local/bin/install-wordpress.sh
-RUN /usr/local/bin/install-plugins.sh
 
 EXPOSE 80
 EXPOSE 443
 
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["frankenphp", "run", "--config", "/etc/caddy/Caddyfile"]
