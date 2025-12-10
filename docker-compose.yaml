@@ -13,7 +13,7 @@ services:
       resources:
         limits:
           cpus: '{{CPU_LIMIT}}'
-          memory: {{MEMORY_LIMIT}}
+          memory: '{{MEMORY_LIMIT}}''
     # --- Fim da Inserção ---
     volumes:
       - ./wordpress:/app/public
