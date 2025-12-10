@@ -1,56 +1,45 @@
 version: "3.9"
 
 services:
-  wordpress:
-    build:
-      context: ./frankenphp
-      dockerfile: Dockerfile
-    container_name: wordpress_app
+  frankenphp:
+    build: ./frankenphp
+    container_name: frankenphp-wp
     restart: always
-    environment:
-      DB_NAME: wordpress
-      DB_USER: wordpress
-      DB_PASSWORD: wordpress
-      DB_HOST: db:3306
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
     ports:
-      - "8080:80"
-      - "8443:443"
-    depends_on:
-      - db
-      - redis
+      - "80:80"
+      - "443:443"
     volumes:
-      - wordpress_data:/app/public
-    networks:
-      - wp_network
+      - ./wordpress:/app/public
+    environment:
+      DB_HOST: mariadb
+      DB_NAME: wordpress
+      DB_USER: wpuser
+      DB_PASSWORD: wppassword
+      WP_ENV: production
+    depends_on:
+      - mariadb
+      - redis
 
-  db:
+  mariadb:
     image: mariadb:11
-    container_name: mariadb
+    container_name: mariadb-wp
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_ROOT_PASSWORD: rootpass
       MYSQL_DATABASE: wordpress
-      MYSQL_USER: wordpress
-      MYSQL_PASSWORD: wordpress
+      MYSQL_USER: wpuser
+      MYSQL_PASSWORD: wppassword
     volumes:
-      - db_data:/var/lib/mysql
-    networks:
-      - wp_network
+      - mariadb_data:/var/lib/mysql
 
   redis:
-    image: redis:7-alpine
-    container_name: redis
+    image: redis:7
+    container_name: redis-wp
     restart: always
-    networks:
-      - wp_network
-    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
 
 volumes:
-  wordpress_data:
-  db_data:
-
-networks:
-  wp_network:
-    driver: bridge
+  mariadb_data:
+  redis_data:
