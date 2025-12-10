@@ -1,3 +1,57 @@
+{
+    # Logs estruturados (compatível com Coolify)
+    log {
+        output stdout
+        format json
+    }
+
+    # Configuração do servidor PHP do FrankenPHP
+    frankenphp {
+        worker 4
+    }
+}
+
 :80 {
-    tls internal
+    root * /app/public
+
+    php_server frankenphp
+
+    # Codificadores modernos (gzip + zstd)
+    encode zstd gzip
+
+    # Cache agressivo de assets estáticos
+    @static_assets {
+        path *.css *.js *.jpg *.jpeg *.png *.gif *.webp *.svg *.ico *.woff *.woff2 *.ttf *.otf
+    }
+    header @static_assets Cache-Control "public, max-age=31536000, immutable"
+
+    # Cache leve para visitantes não autenticados
+    @wp_cache {
+        not path /wp-admin/*
+        not header Cookie *wordpress_logged_in*
+    }
+    header @wp_cache Cache-Control "public, max-age=120, stale-while-revalidate=30"
+
+    # Headers de segurança
+    header {
+        Strict-Transport-Security "max-age=31536000; preload"
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+    }
+
+    # Remover headers desnecessários
+    header -Server
+    header -X-Powered-By
+
+    # Reescrita padrão do WordPress
+    try_files {path} {path}/ /index.php
+
+    file_server
+}
+
+# Healthcheck para Coolify
+:80/health {
+    respond "OK" 200
 }
