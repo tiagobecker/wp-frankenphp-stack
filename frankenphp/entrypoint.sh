@@ -2,6 +2,7 @@
 set -e
 
 WP_PATH="/app/public"
+WP_CLI="/usr/local/bin/wp"
 
 mkdir -p $WP_PATH
 cd $WP_PATH
