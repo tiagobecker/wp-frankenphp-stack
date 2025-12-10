@@ -28,6 +28,7 @@ RUN install-php-extensions \
     mysqli \
     pdo_mysql \
     mysqlnd \
+    exif \
     gd \
     intl \
     zip \
