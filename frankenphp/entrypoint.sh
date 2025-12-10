@@ -7,7 +7,7 @@ WP_CLI="/usr/local/bin/wp"
 mkdir -p $WP_PATH
 cd $WP_PATH
 
-# --- Instala WordPress se não existir ---
+# --- Instalar WordPress se não existir ---
 if [ ! -f "$WP_PATH/wp-config.php" ]; then
     echo "Instalando WordPress..."
     $WP_CLI core download --allow-root
@@ -21,20 +21,19 @@ if [ ! -f "$WP_PATH/wp-config.php" ]; then
     echo "WordPress instalado."
 fi
 
-# Aguarda WordPress pronto
-while [ ! -d "$WP_PATH/wp-admin" ] || [ ! -d "$WP_PATH/wp-includes" ]; do
-    echo "Aguardando WordPress terminar..."
+# --- Aguarda WordPress totalmente pronto ---
+echo "Aguardando WordPress ficar disponível..."
+until $WP_CLI core is-installed --allow-root; do
+    echo "WordPress ainda não está pronto, aguardando 2s..."
     sleep 2
 done
 
-# --- Instala plugins Redis e WP Super Cache ---
-echo "Instalando e ativando plugins..."
-
-# Usando WP-CLI absoluto
+# --- Instala e ativa plugins ---
+echo "Instalando plugins Redis Object Cache e WP Super Cache..."
 $WP_CLI plugin install redis-cache --activate --allow-root || true
 $WP_CLI plugin install wp-super-cache --activate --allow-root || true
 
-# Configura Redis no wp-config.php
+# --- Configura Redis no wp-config.php ---
 if ! grep -q "WP_REDIS_HOST" wp-config.php; then
 cat << 'EOF' >> wp-config.php
 
@@ -48,7 +47,7 @@ define( 'WP_REDIS_PREFIX', 'wp_' );
 EOF
 fi
 
-# Configura WP Super Cache
+# --- Configura WP Super Cache ---
 if ! grep -q "WP_CACHE" wp-config.php; then
 cat << 'EOF' >> wp-config.php
 
