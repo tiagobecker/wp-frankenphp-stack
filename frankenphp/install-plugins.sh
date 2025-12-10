@@ -2,30 +2,26 @@
 set -e
 
 WP_PATH="/app/public"
+WP_CLI="/usr/local/bin/wp"
 
 echo "=== WP Plugins Installer ==="
 
-# Espera WordPress estar 100% pronto
-while [ ! -f "$WP_PATH/wp-config.php" ] || [ ! -d "$WP_PATH/wp-includes" ] || [ ! -d "$WP_PATH/wp-admin" ]; do
-    echo "Aguardando WordPress completo..."
+# Aguarda wp-config.php existir
+while [ ! -f "$WP_PATH/wp-config.php" ]; do
+    echo "Aguardando wp-config.php..."
     sleep 2
 done
 
 cd $WP_PATH
 
-# Instala Redis Object Cache
-if ! wp plugin is-installed redis-cache --path=$WP_PATH --allow-root; then
-    wp plugin install redis-cache --path=$WP_PATH --allow-root
-fi
-wp plugin activate redis-cache --path=$WP_PATH --allow-root || true
+# Instala e ativa plugins
+$WP_CLI plugin install redis-cache --allow-root || true
+$WP_CLI plugin activate redis-cache --allow-root || true
 
-# Instala WP Super Cache
-if ! wp plugin is-installed wp-super-cache --path=$WP_PATH --allow-root; then
-    wp plugin install wp-super-cache --path=$WP_PATH --allow-root
-fi
-wp plugin activate wp-super-cache --path=$WP_PATH --allow-root || true
+$WP_CLI plugin install wp-super-cache --allow-root || true
+$WP_CLI plugin activate wp-super-cache --allow-root || true
 
-# Configura wp-config.php
+# Configura Redis
 if ! grep -q "WP_REDIS_HOST" wp-config.php; then
 cat << 'EOF' >> wp-config.php
 
@@ -39,6 +35,7 @@ define( 'WP_REDIS_PREFIX', 'wp_' );
 EOF
 fi
 
+# Configura WP Super Cache
 if ! grep -q "WP_CACHE" wp-config.php; then
 cat << 'EOF' >> wp-config.php
 
