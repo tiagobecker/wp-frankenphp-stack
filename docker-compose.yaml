@@ -8,6 +8,13 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    # --- Início da Inserção ---
+    deploy:
+      resources:
+        limits:
+          cpus: '{{CPU_LIMIT}}'
+          memory: '{{MEMORY_LIMIT}}'
+    # --- Fim da Inserção ---
     volumes:
       - ./wordpress:/app/public
     environment:
