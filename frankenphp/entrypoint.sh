@@ -31,7 +31,7 @@ until $WP_CLI core is-installed --allow-root; do
     sleep 2
 done
 
-# --- Instala plugins Redis Cache e WP Super Cache ---
+# --- Instala plugins Redis e Super Cache ---
 for i in {1..10}; do
     set +e
     $WP_CLI plugin install redis-cache --activate --allow-root

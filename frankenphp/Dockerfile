@@ -53,6 +53,7 @@ COPY wp-cli.yaml /etc/wp-cli.yaml
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
+# --- Diretório do site ---
 WORKDIR /app/public
 
 EXPOSE 80
