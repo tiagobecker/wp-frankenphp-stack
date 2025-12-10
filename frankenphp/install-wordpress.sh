@@ -1,10 +1,9 @@
 #!/bin/bash
-
 set -e
 
+mkdir -p /app/public
 cd /app/public
 
-# Se já existir WordPress, não instala
 if [ -f "wp-config.php" ]; then
     echo "WordPress já instalado, pulando..."
     exit 0
@@ -15,10 +14,12 @@ curl -o wp.tar.gz https://wordpress.org/latest.tar.gz
 tar -xzf wp.tar.gz --strip-components=1
 rm wp.tar.gz
 
-echo "Instalando WP-CLI..."
-curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
-chmod +x wp-cli.phar
-mv wp-cli.phar /usr/local/bin/wp
+if ! command -v wp >/dev/null 2>&1; then
+    echo "Instalando WP-CLI..."
+    curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+    chmod +x wp-cli.phar
+    mv wp-cli.phar /usr/local/bin/wp
+fi
 
 echo "Gerando wp-config..."
 wp config create \

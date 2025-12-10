@@ -1,6 +1,5 @@
 FROM dunglas/frankenphp:1-php8.4-bookworm
 
-# Instalar dependências do sistema
 RUN apt-get update && apt-get install -y \
     bash \
     curl \
@@ -25,7 +24,6 @@ RUN apt-get update && apt-get install -y \
     pkg-config \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# PHP extensões
 RUN install-php-extensions \
     pdo_mysql \
     gd \
@@ -35,24 +33,18 @@ RUN install-php-extensions \
     imagick \
     redis
 
-# Instalar Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# Copiar configs
 COPY php.ini /usr/local/etc/php/
 COPY Caddyfile /etc/caddy/Caddyfile
 COPY install-wordpress.sh /usr/local/bin/install-wordpress.sh
 COPY wp-cli.yaml /etc/wp-cli.yaml
 
-# Permitir execução do instalador WordPress
 RUN chmod +x /usr/local/bin/install-wordpress.sh
 
 WORKDIR /app/public
 
-# Executar WordPress installer automático
-RUN /usr/local/bin/install-wordpress.sh
-
 EXPOSE 80
 EXPOSE 443
 
-CMD ["frankenphp", "run", "--config", "/etc/caddy/Caddyfile"]
+CMD ["/bin/bash", "-c", "install-wordpress.sh && frankenphp run --config /etc/caddy/Caddyfile"]
