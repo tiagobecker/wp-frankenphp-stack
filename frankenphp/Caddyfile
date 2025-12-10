@@ -8,7 +8,7 @@
 :80 {
     root * /app/public
 
-    # Serve cache estático gerado pelo WP Super Cache (se existir)
+    # Serve cache estático do WP Super Cache
     @supercache {
         file {
             try_files /wp-content/cache/supercache{uri}/index.html /wp-content/cache/supercache{host}{uri}/index.html
@@ -19,7 +19,7 @@
         header Cache-Control "public, max-age=60, stale-while-revalidate=30"
     }
 
-    # Static assets caching
+    # Assets estáticos (CSS, JS, imagens, fontes)
     @static_assets {
         path *.css *.js *.jpg *.jpeg *.png *.gif *.svg *.ico *.webp *.avif *.ttf *.otf *.woff *.woff2
     }
@@ -28,7 +28,7 @@
         header Cache-Control "public, max-age=31536000, immutable"
     }
 
-    # Não cachear admin, login, REST API, feed e cookies de usuário logado
+    # Admin, login, REST API, feed e cookies de usuário logado → não cachear
     @no_cache {
         path /wp-admin/* /wp-login.php /xmlrpc.php /wp-json/*
         header_regexp Cookie "wordpress_logged_in_.*"
@@ -43,7 +43,7 @@
         respond "OK" 200
     }
 
-    # Todas as demais requisições → fallback para PHP
+    # Todas as outras requisições → fallback PHP
     handle {
         try_files {path} {path}/ /index.php
         php_server frankenphp
