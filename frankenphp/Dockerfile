@@ -1,5 +1,6 @@
 FROM dunglas/frankenphp:1-php8.4-bookworm
 
+# dependências do sistema
 RUN apt-get update && apt-get install -y \
     bash \
     curl \
@@ -48,13 +49,15 @@ COPY install-plugins.sh /usr/local/bin/install-plugins.sh
 RUN chmod +x /usr/local/bin/install-wordpress.sh
 RUN chmod +x /usr/local/bin/install-plugins.sh
 
-# executa wordpress → depois plugins
+# --- SOLUÇÃO: criamos o diretório e trocamos o WORKDIR antes dos scripts ---
+RUN mkdir -p /app/public
+WORKDIR /app/public
+
+# instalar WordPress e plugins
 RUN /usr/local/bin/install-wordpress.sh
 RUN /usr/local/bin/install-plugins.sh
-
-WORKDIR /app/public
 
 EXPOSE 80
 EXPOSE 443
 
-CMD ["/bin/bash", "-c", "install-wordpress.sh && frankenphp run --config /etc/caddy/Caddyfile"]
+CMD ["frankenphp", "run", "--config", "/etc/caddy/Caddyfile"]
