@@ -41,7 +41,7 @@ RUN install-php-extensions \
 # --- Composer ---
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# --- Configs ---
+# --- Copiar configs ---
 COPY php.ini /usr/local/etc/php/
 COPY Caddyfile /etc/caddy/Caddyfile
 COPY wp-cli.yaml /etc/wp-cli.yaml
@@ -49,6 +49,7 @@ COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
+# --- Workdir ---
 WORKDIR /app/public
 
 EXPOSE 80

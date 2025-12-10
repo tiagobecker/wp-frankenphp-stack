@@ -3,8 +3,8 @@ version: "3.9"
 services:
   wordpress:
     build:
-      context: .
-      dockerfile: frankenphp/Dockerfile
+      context: ./frankenphp
+      dockerfile: Dockerfile
     container_name: wordpress_app
     restart: always
     environment:
