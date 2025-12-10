@@ -1,6 +1,6 @@
 FROM dunglas/frankenphp:1-php8.4-bookworm
 
-# Instala dependências do sistema
+# Dependências do sistema
 RUN apt-get update && apt-get install -y \
     bash curl unzip tar git openssl mariadb-client \
     libzip-dev libonig-dev libicu-dev libmagickwand-dev imagemagick \
@@ -20,16 +20,11 @@ RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli
     && chmod +x wp-cli.phar \
     && mv wp-cli.phar /usr/local/bin/wp
 
-# Copiar arquivos de configuração e scripts
+# Copiar arquivos de configuração
 COPY php.ini /usr/local/etc/php/
 COPY Caddyfile /etc/caddy/Caddyfile
-COPY wp-cli.yaml /etc/wp-cli.yaml
-COPY install-wordpress.sh /usr/local/bin/install-wordpress.sh
-COPY install-plugins.sh /usr/local/bin/install-plugins.sh
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 
-RUN chmod +x /usr/local/bin/install-wordpress.sh
-RUN chmod +x /usr/local/bin/install-plugins.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Criar diretório WordPress
