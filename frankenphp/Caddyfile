@@ -10,15 +10,12 @@
 
     # Serve cache estático gerado pelo WP Super Cache (se existir)
     @supercache {
-        # Qualquer requisição que tenha um arquivo correspondente no cache
         file {
             try_files /wp-content/cache/supercache{uri}/index.html /wp-content/cache/supercache{host}{uri}/index.html
         }
     }
     handle @supercache {
-        # serve as static cache files directly
         file_server
-        # garante headers long cache para o HTML cacheado
         header Cache-Control "public, max-age=60, stale-while-revalidate=30"
     }
 
@@ -50,6 +47,8 @@
     }
 
     # healthcheck
-    @health { path /health }
-    handle @health { respond "OK" 200 }
+    @health path /health
+    handle @health {
+        respond "OK" 200
+    }
 }
