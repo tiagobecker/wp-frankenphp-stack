@@ -8,7 +8,7 @@ mkdir -p $WP_PATH
 cd $WP_PATH
 
 # --- Instalar WordPress se não existir ---
-if [ ! -f "$WP_PATH/wp-config.php" ]; then
+if [ ! -f wp-config.php ]; then
     echo "Instalando WordPress..."
     $WP_CLI core download --allow-root
 
@@ -19,26 +19,27 @@ if [ ! -f "$WP_PATH/wp-config.php" ]; then
         --dbhost="${DB_HOST}" \
         --skip-check \
         --allow-root; do
-        echo "Banco não acessível, tentando novamente..."
+        echo "Banco não acessível. Tentando novamente em 2s..."
         sleep 2
     done
-
-    echo "WordPress instalado."
 fi
 
-# --- Aguarda WordPress pronto ---
+# --- Espera WordPress estar funcional ---
 until $WP_CLI core is-installed --allow-root; do
-    echo "WordPress ainda não pronto..."
+    echo "WordPress ainda não instalado. Aguardando..."
     sleep 2
 done
 
-# --- Instalar plugins com retries ---
-for i in {1..5}; do
+# --- Instala plugins com retries ---
+for i in {1..10}; do
     set +e
     $WP_CLI plugin install redis-cache --activate --allow-root
     $WP_CLI plugin install wp-super-cache --activate --allow-root
-    if [ $? -eq 0 ]; then break; fi
-    echo "Erro ao instalar plugins, retry..."
+    if [ $? -eq 0 ]; then
+        echo "Plugins instalados com sucesso."
+        break
+    fi
+    echo "Falha na instalação de plugins. Retry 2s..."
     sleep 2
     set -e
 done
