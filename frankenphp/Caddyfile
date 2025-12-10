@@ -1,79 +1,68 @@
 {
-    # Ativa HTTP/3 + QUIC
+    # Ativa HTTP/3 globalmente
     servers {
-        protocol {
-            experimental_http3
+        listener_wrappers {
+            tls
+            http
         }
     }
 
-    # Logging básico
-    debug
+    # Logs estruturados (ótimo para Coolify)
+    logging {
+        output stdout
+        format json
+    }
+
+    # Melhora performance de workers do frankenphp
+    frankenphp {
+        worker 4
+    }
 }
 
 :80 {
-    encode gzip zstd
+    # Pasta pública do WordPress
+    root * /app/public
 
-    # Redireciona tudo para HTTPS quando ativado no ambiente Coolify
-    @http {
-        protocol http
+    # Encoders modernos
+    encode zstd gzip
+
+    # Usa o PHP embed do FrankenPHP
+    php_server frankenphp
+
+    # Assets cacheados agressivamente
+    @static_assets {
+        path *.css *.js *.jpg *.jpeg *.png *.gif *.webp *.svg *.ico *.woff *.woff2 *.ttf *.otf
     }
-    redir @http https://{host}{uri}
+    header @static_assets Cache-Control "public, max-age=31536000, immutable"
 
-    handle_path / {
-        root * /app/public
-
-        # FrankenPHP handler
-        php_server * {
-            worker /app/public/index.php
-        }
-
-        file_server
+    # Cache para páginas não autenticadas (melhor performance WP)
+    @wp_cache {
+        not path /wp-admin/*
+        not header Cookie *wordpress_logged_in*
     }
+    header @wp_cache Cache-Control "public, max-age=120, stale-while-revalidate=30"
 
-    # Cache agressivo de assets estáticos
-    @static {
-        path *.png *.jpg *.jpeg *.svg *.gif *.ico *.css *.js *.webp *.avif *.ttf *.otf *.woff *.woff2 *.eot
-    }
-    header @static Cache-Control "public, max-age=31536000, immutable"
-
-    # Segurança
+    # Segurança avançada OWASP
     header {
-        Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
-        X-Content-Type-Options "nosniff"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
         X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
         Referrer-Policy "strict-origin-when-cross-origin"
-        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+        Permissions-Policy "accelerometer=(), geolocation=(), microphone=(), camera=(), interest-cohort=()"
+        X-XSS-Protection "1; mode=block"
     }
+
+    # Remove headers sensíveis
+    header -Server
+    header -X-Powered-By
+
+    # Rewrite padrão WordPress
+    try_files {path} {path}/ /index.php
+
+    file_server
 }
 
-# HTTPS para produção (Coolify assume domínio SSL automático)
-:443 {
-    tls {
-        # Coolify gerencia certificados automaticamente
-    }
-
-    encode gzip zstd
-
-    handle_path / {
-        root * /app/public
-
-        php_server * {
-            worker /app/public/index.php
-        }
-
-        file_server
-    }
-
-    @static {
-        path *.png *.jpg *.jpeg *.svg *.gif *.ico *.css *.js *.webp *.avif *.ttf *.otf *.woff *.woff2 *.eot
-    }
-    header @static Cache-Control "public, max-age=31536000, immutable"
-
-    header {
-        Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
-        X-Content-Type-Options "nosniff"
-        X-Frame-Options "SAMEORIGIN"
-        Referrer-Policy "strict-origin-when-cross-origin"
-        Permissions-Policy "camera=(), microphone=(), geolocation=()"
-    }
+# Opcional: endpoint de health-check para o Coolify
+:80/health {
+    respond "OK" 200
 }
