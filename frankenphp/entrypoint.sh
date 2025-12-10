@@ -4,10 +4,15 @@ set -e
 WP_PATH="/app/public"
 WP_CLI="/usr/local/bin/wp"
 
-# A pasta /app/public já existe e é o volume montado pelo Coolify
+# --- Espera volume estar montado ---
+until [ -d "$WP_PATH" ]; do
+    echo "Aguardando o volume do Coolify..."
+    sleep 1
+done
+
 cd $WP_PATH
 
-# --- Instala WordPress somente se não existir ---
+# --- Instala WordPress se não existir ---
 if [ ! -f wp-config.php ]; then
     echo "Instalando WordPress..."
     $WP_CLI core download --allow-root
@@ -23,19 +28,25 @@ if [ ! -f wp-config.php ]; then
         echo "Banco não acessível, tentando novamente em 2s..."
         sleep 2
     done
+
+    $WP_CLI core install \
+        --url="${DOMAIN_URL}" \
+        --title="WordPress Site" \
+        --admin_user="${WP_ADMIN_USER:-admin}" \
+        --admin_password="${WP_ADMIN_PASSWORD:-admin}" \
+        --admin_email="${WP_ADMIN_EMAIL:-admin@example.com}" \
+        --skip-email \
+        --allow-root
 fi
 
-# --- Instala plugins se WordPress estiver instalado ---
-until $WP_CLI core is-installed --allow-root; do
-    echo "WordPress ainda não instalado, aguardando..."
-    sleep 2
+# --- Instala plugins ---
+for plugin in redis-cache wp-super-cache; do
+    if ! $WP_CLI plugin is-installed $plugin --allow-root; then
+        $WP_CLI plugin install $plugin --activate --allow-root
+    fi
 done
 
-echo "Instalando plugins Redis Object Cache e WP Super Cache..."
-$WP_CLI plugin install redis-cache --activate --allow-root
-$WP_CLI plugin install wp-super-cache --activate --allow-root
-
-# --- Configura Redis no wp-config.php ---
+# --- Configura Redis ---
 grep -q "WP_REDIS_HOST" wp-config.php || cat << 'EOF' >> wp-config.php
 
 /** Redis Object Cache */
