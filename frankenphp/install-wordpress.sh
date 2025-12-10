@@ -30,4 +30,15 @@ wp config create \
   --skip-check \
   --allow-root
 
+echo "Instalando plugin Redis Object Cache..."
+wp plugin install redis-cache --activate --allow-root
+
+echo "Configurando Redis no wp-config.php..."
+wp config set WP_CACHE true --raw --allow-root
+wp config set WP_REDIS_HOST "redis" --allow-root
+wp config set WP_REDIS_PORT 6379 --raw --allow-root
+wp config set WP_REDIS_TIMEOUT 1 --raw --allow-root
+wp config set WP_REDIS_READ_TIMEOUT 1 --raw --allow-root
+wp config set WP_REDIS_DATABASE 0 --raw --allow-root
+
 echo "Instalação do WordPress pronta."
