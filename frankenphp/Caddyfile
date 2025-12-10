@@ -1,36 +1,44 @@
 {
-    # Logs estruturados (compatível com Coolify)
     logging {
         output stdout
         format json
-    }
-
-    # Configuração do servidor PHP do FrankenPHP
-    frankenphp {
-        worker 4
     }
 }
 
 :80 {
     root * /app/public
 
-    php_server frankenphp
+    # Serve cache estático gerado pelo WP Super Cache (se existir)
+    @supercache {
+        # Qualquer requisição que tenha um arquivo correspondente no cache
+        file {
+            try_files /wp-content/cache/supercache{uri}/index.html /wp-content/cache/supercache{host}{uri}/index.html
+        }
+    }
+    handle @supercache {
+        # serve as static cache files directly
+        file_server
+        # garante headers long cache para o HTML cacheado
+        header Cache-Control "public, max-age=60, stale-while-revalidate=30"
+    }
 
-    # Codificadores modernos (gzip + zstd)
-    encode zstd gzip
-
-    # Cache agressivo de assets estáticos
+    # Static assets caching
     @static_assets {
-        path *.css *.js *.jpg *.jpeg *.png *.gif *.webp *.svg *.ico *.woff *.woff2 *.ttf *.otf
+        path *.css *.js *.jpg *.jpeg *.png *.gif *.svg *.ico *.webp *.avif *.ttf *.otf *.woff *.woff2
     }
     header @static_assets Cache-Control "public, max-age=31536000, immutable"
 
-    # Cache leve para visitantes não autenticados
-    @wp_cache {
-        not path /wp-admin/*
-        not header Cookie *wordpress_logged_in*
+    # Não cachear admin, login, REST API, feed e cookies de usuário logado
+    @no_cache {
+        path /wp-admin/* /wp-login.php /xmlrpc.php /wp-json/*
+        header_regexp Cookie "wordpress_logged_in_.*"
     }
-    header @wp_cache Cache-Control "public, max-age=120, stale-while-revalidate=30"
+
+    # Se não for cache estático e não for no-no_cache, passa para o PHP
+    route {
+        try_files {path} {path}/ /index.php
+        php_server frankenphp
+    }
 
     # Headers de segurança
     header {
@@ -41,17 +49,7 @@
         Permissions-Policy "camera=(), microphone=(), geolocation=()"
     }
 
-    # Remover headers desnecessários
-    header -Server
-    header -X-Powered-By
-
-    # Reescrita padrão do WordPress
-    try_files {path} {path}/ /index.php
-
-    file_server
-}
-
-# Healthcheck para Coolify
-:80/health {
-    respond "OK" 200
+    # healthcheck
+    @health { path /health }
+    handle @health { respond "OK" 200 }
 }

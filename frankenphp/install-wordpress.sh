@@ -44,4 +44,21 @@ wp config set WP_REDIS_DATABASE 0 --raw --allow-root
 echo "Ativando cache Redis..."
 wp redis enable --allow-root
 
+# instalar e ativar WP Super Cache
+echo "Instalando plugin WP Super Cache..."
+wp plugin install wp-super-cache --activate --allow-root
+
+# Forçar configurações básicas de cache (escrita em disco)
+wp option update wp_super_cache_file_mod_rewrite 0 --allow-root
+wp option update supercache_enabled 1 --allow-root
+wp option update cache_home "/app/public/wp-content/cache/supercache/" --allow-root
+# Mod_rewrite = 0 (fallback PHP-cache) — garantimos que o plugin gere cache em disco
+# Ajustar compressão e excluir páginas admin/login/rest
+wp option update wp_super_cache_mobile_enabled 0 --allow-root
+wp option update wp_super_cache_front_page 1 --allow-root
+
+# Garantir permissão (importante quando Coolify monta volumes)
+chown -R www-data:www-data /app/public/wp-content/cache
+chmod -R 755 /app/public/wp-content/cache
+
 echo "Instalação do WordPress pronta."
