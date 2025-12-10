@@ -2,7 +2,7 @@
 set -e
 
 WP_PATH="/app/public"
-WP_CLI="/usr/local/bin/wp"
+WP_CLI="/usr/local/bin/wp"  # caminho absoluto
 
 echo "=== WP Plugins Installer ==="
 
@@ -14,14 +14,14 @@ done
 
 cd $WP_PATH
 
-# Instala e ativa plugins
+# Instala plugins
 $WP_CLI plugin install redis-cache --allow-root || true
 $WP_CLI plugin activate redis-cache --allow-root || true
 
 $WP_CLI plugin install wp-super-cache --allow-root || true
 $WP_CLI plugin activate wp-super-cache --allow-root || true
 
-# Configura Redis
+# Configura Redis no wp-config.php
 if ! grep -q "WP_REDIS_HOST" wp-config.php; then
 cat << 'EOF' >> wp-config.php
 
