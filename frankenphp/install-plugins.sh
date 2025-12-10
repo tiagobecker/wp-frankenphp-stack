@@ -5,27 +5,27 @@ WP_PATH="/app/public"
 
 echo "=== WP Plugins Installer ==="
 
-# Aguarda WordPress completo
-while [ ! -f "$WP_PATH/wp-config.php" ] || [ ! -d "$WP_PATH/wp-includes" ]; do
-    echo "Aguardando WordPress terminar instalação..."
+# Espera WordPress estar 100% pronto
+while [ ! -f "$WP_PATH/wp-config.php" ] || [ ! -d "$WP_PATH/wp-includes" ] || [ ! -d "$WP_PATH/wp-admin" ]; do
+    echo "Aguardando WordPress completo..."
     sleep 2
 done
 
 cd $WP_PATH
 
-# Instalar Redis Object Cache
+# Instala Redis Object Cache
 if ! wp plugin is-installed redis-cache --path=$WP_PATH --allow-root; then
     wp plugin install redis-cache --path=$WP_PATH --allow-root
 fi
 wp plugin activate redis-cache --path=$WP_PATH --allow-root || true
 
-# Instalar WP Super Cache
+# Instala WP Super Cache
 if ! wp plugin is-installed wp-super-cache --path=$WP_PATH --allow-root; then
     wp plugin install wp-super-cache --path=$WP_PATH --allow-root
 fi
 wp plugin activate wp-super-cache --path=$WP_PATH --allow-root || true
 
-# Configurar wp-config.php
+# Configura wp-config.php
 if ! grep -q "WP_REDIS_HOST" wp-config.php; then
 cat << 'EOF' >> wp-config.php
 
