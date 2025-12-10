@@ -41,15 +41,18 @@ RUN install-php-extensions \
 # --- Composer ---
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# --- Copiar configs ---
+# --- WP-CLI ---
+RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar \
+    && chmod +x wp-cli.phar \
+    && mv wp-cli.phar /usr/local/bin/wp
+
+# --- Copiar configs e entrypoint ---
 COPY php.ini /usr/local/etc/php/
 COPY Caddyfile /etc/caddy/Caddyfile
 COPY wp-cli.yaml /etc/wp-cli.yaml
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# --- Workdir ---
 WORKDIR /app/public
 
 EXPOSE 80
