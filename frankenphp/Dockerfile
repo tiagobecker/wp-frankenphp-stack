@@ -42,7 +42,7 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 COPY php.ini /usr/local/etc/php/
 COPY Caddyfile /etc/caddy/Caddyfile
 COPY install-wordpress.sh /usr/local/bin/install-wordpress.sh
-COPY wp-cli.yml /etc/wp-cli.yml
+COPY wp-cli.yaml /etc/wp-cli.yaml
 
 # Permitir execução do instalador WordPress
 RUN chmod +x /usr/local/bin/install-wordpress.sh
