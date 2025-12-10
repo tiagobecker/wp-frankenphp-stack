@@ -1,21 +1,18 @@
 #!/bin/bash
 set -e
 
-echo "Aguardando banco de dados..."
+WP_PATH="/app/public"
 
-until mysqladmin ping -h"$WORDPRESS_DB_HOST" --silent; do
-  sleep 2
-done
+mkdir -p $WP_PATH
 
-# --- 1. INSTALAR WORDPRESS ---
-if [ ! -f /app/public/wp-config.php ]; then
-    echo "Instalando WordPress..."
+echo "=== ENTRYPOINT → verificando instalação do WordPress ==="
 
+if [ ! -f "$WP_PATH/wp-config.php" ]; then
+    echo "Nenhuma instalação encontrada. Instalando WordPress..."
     /usr/local/bin/install-wordpress.sh
+    /usr/local/bin/install-plugins.sh
+else
+    echo "WordPress já existe. Pulando instalação."
 fi
 
-# --- 2. INSTALAR PLUGINS ---
-/usr/local/bin/install-plugins.sh
-
-echo "Sistema pronto!"
 exec "$@"
