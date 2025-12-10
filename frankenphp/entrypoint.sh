@@ -7,9 +7,9 @@ WP_CLI="/usr/local/bin/wp"
 mkdir -p $WP_PATH
 cd $WP_PATH
 
-# --- Instalar WordPress se não existir ---
+# --- Instala WordPress se não existir ---
 if [ ! -f wp-config.php ]; then
-    echo "Instalando WordPress..."
+    echo "WordPress não encontrado. Instalando..."
     $WP_CLI core download --allow-root
 
     until $WP_CLI config create \
@@ -19,14 +19,14 @@ if [ ! -f wp-config.php ]; then
         --dbhost="${DB_HOST}" \
         --skip-check \
         --allow-root; do
-        echo "Banco não acessível. Tentando novamente em 2s..."
+        echo "Banco não acessível, tentando novamente em 2s..."
         sleep 2
     done
 fi
 
-# --- Espera WordPress estar funcional ---
+# --- Aguarda WordPress estar pronto ---
 until $WP_CLI core is-installed --allow-root; do
-    echo "WordPress ainda não instalado. Aguardando..."
+    echo "WordPress ainda não instalado. Aguardando 2s..."
     sleep 2
 done
 
@@ -35,11 +35,8 @@ for i in {1..10}; do
     set +e
     $WP_CLI plugin install redis-cache --activate --allow-root
     $WP_CLI plugin install wp-super-cache --activate --allow-root
-    if [ $? -eq 0 ]; then
-        echo "Plugins instalados com sucesso."
-        break
-    fi
-    echo "Falha na instalação de plugins. Retry 2s..."
+    if [ $? -eq 0 ]; then break; fi
+    echo "Falha na instalação de plugins, retry em 2s..."
     sleep 2
     set -e
 done
@@ -62,6 +59,8 @@ grep -q "WP_CACHE" wp-config.php || cat << 'EOF' >> wp-config.php
 /** WP Super Cache */
 define('WP_CACHE', true);
 EOF
+
+echo "WordPress e plugins prontos."
 
 # --- Inicia FrankenPHP ---
 exec frankenphp run --config /etc/caddy/Caddyfile
