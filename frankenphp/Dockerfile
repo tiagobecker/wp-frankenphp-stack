@@ -25,7 +25,9 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN install-php-extensions \
+    mysqli \
     pdo_mysql \
+    mysqlnd \
     gd \
     intl \
     zip \
