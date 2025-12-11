@@ -27,7 +27,6 @@ RUN apt-get update && apt-get install -y \
 RUN install-php-extensions \
     pdo_mysql \
     mysqli \
-    pdo_mysql \
     mysqlnd \
     exif \
     gd \
