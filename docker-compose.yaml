@@ -12,8 +12,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '{{CPU_LIMIT}}'
-          memory: '{{MEMORY_LIMIT}}'
+          cpus: ${CPU_LIMIT}
+          memory: ${MEMORY_LIMIT}
     # --- Fim da Inserção ---
     volumes:
       - ./wordpress:/app/public
