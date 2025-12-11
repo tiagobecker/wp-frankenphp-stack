@@ -6,7 +6,7 @@ services:
     container_name: frankenphp-wp
     restart: always
     healthcheck:
-      ttest: ["CMD", "curl", "-f", "http://localhost"]
+      test: ["CMD", "curl", "-f", "http://localhost"]
       interval: 1m30s
       timeout: 10s
       retries: 3
