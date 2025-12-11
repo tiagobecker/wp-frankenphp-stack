@@ -5,9 +5,13 @@ services:
     build: ./frankenphp
     container_name: frankenphp-wp
     restart: always
-    networks:
-      - coolify
-      - default
+    # --- Início da Inserção ---
+    deploy:
+      resources:
+        limits:
+          cpus: ${CPU_LIMIT}
+          memory: ${MEMORY_LIMIT}
+    # --- Fim da Inserção ---
     volumes:
       - ./wordpress:/app/public
     environment:
@@ -16,6 +20,9 @@ services:
       DB_USER: wpuser
       DB_PASSWORD: wppassword
       WP_ENV: production
+      WP_HOME: ${WP_HOME}
+      WP_SITEURL: ${WP_SITEURL}
+      SERVER_NAME: ${SERVER_NAME}
     depends_on:
       - mariadb
       - redis
@@ -43,7 +50,3 @@ services:
 volumes:
   mariadb_data:
   redis_data:
-
-networks:
-  coolify:
-    external: true  
